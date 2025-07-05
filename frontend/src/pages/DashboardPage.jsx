@@ -2,6 +2,8 @@ import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 // MOCK DATA para pruebas (cámbialo en la Etapa 7 por fetch real)
 const MOCK_INGRESOS = [
@@ -67,6 +69,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+            <Header />
       <main className="flex-1 flex flex-col items-center w-full">
         {/* Contenedor principal ultra ancho y paddings grandes */}
         <div className="w-full max-w-screen-2xl px-2 sm:px-6 lg:px-20 xl:px-36 py-12">
@@ -217,6 +220,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+            <Footer />
     </div>
   );
 }
