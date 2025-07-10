@@ -20,7 +20,8 @@ class IngresoController extends Controller
     // Crea un nuevo ingreso
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Usar el helper de validación del controlador para mayor compatibilidad
+        $validated = $this->validate($request, [
             'user_id' => 'required',
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
@@ -35,7 +36,7 @@ class IngresoController extends Controller
     public function update(Request $request, $id)
     {
         $ingreso = Ingreso::findOrFail($id);
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
             'categoria_id' => 'nullable|integer',

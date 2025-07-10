@@ -19,7 +19,8 @@ class GastoController extends Controller
     // Crea un nuevo gasto
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Usamos el validador del controlador para asegurar compatibilidad
+        $validated = $this->validate($request, [
             'user_id' => 'required',
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
@@ -34,7 +35,7 @@ class GastoController extends Controller
     public function update(Request $request, $id)
     {
         $gasto = Gasto::findOrFail($id);
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
             'categoria_id' => 'nullable|integer',
