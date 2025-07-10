@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ingreso; // Asegúrate de tener el modelo Ingreso creado
+use App\Models\User;
 
 class IngresoController extends Controller
 {
@@ -22,7 +23,7 @@ class IngresoController extends Controller
     {
         // Usar el helper de validación del controlador para mayor compatibilidad
         $validated = $this->validate($request, [
-            'user_id' => 'required',
+            'user_id' => 'required|exists:users,id',
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
             'categoria_id' => 'nullable|integer',

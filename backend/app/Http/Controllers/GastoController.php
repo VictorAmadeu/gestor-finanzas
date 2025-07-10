@@ -21,7 +21,7 @@ class GastoController extends Controller
     {
         // Usamos el validador del controlador para asegurar compatibilidad
         $validated = $this->validate($request, [
-            'user_id' => 'required',
+            'user_id' => 'required|exists:users,id',
             'fecha' => 'required|date',
             'descripcion' => 'nullable|string',
             'categoria_id' => 'nullable|integer',
@@ -30,6 +30,7 @@ class GastoController extends Controller
         $gasto = Gasto::create($validated);
         return response()->json($gasto, 201);
     }
+
 
     // Actualiza un gasto existente
     public function update(Request $request, $id)
