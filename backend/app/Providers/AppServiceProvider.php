@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+         $this->app->singleton(
+            \Illuminate\Contracts\Foundation\MaintenanceMode::class,
+            fn () => $this->app->make(\Illuminate\Foundation\MaintenanceModeManager::class)->driver()
+        );
     }
 
     /**
