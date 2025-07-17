@@ -3,31 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Ingreso; // Asegúrate de tener el modelo Ingreso creado
-use App\Models\User;
+use App\Models\Ingreso;
 
 class IngresoController extends Controller
 {
-    // Lista todos los ingresos de un usuario
+    // Lista todos los ingresos de un usuario, incluyendo nombre de categoría
     public function index(Request $request)
     {
-        $userId = $request->query('user_id'); // Recibe user_id por query string
-        // Retorna todos los ingresos del usuario, ordenados por fecha descendente
-        return Ingreso::where('user_id', $userId)
+        $userId = $request->query('user_id');
+        if (!$userId) {
+            return response()->json(['error' => 'Falta user_id'], 400);
+        }
+
+        // Trae los ingresos junto con la relación "categoria"
+        $ingresos = Ingreso::where('user_id', $userId)
             ->orderBy('fecha', 'desc')
-            ->get();
+            ->with('categoria')
+            ->get()
+            ->map(function ($item) {
+                $arr = $item->toArray();
+                $arr['categoria_nombre'] = $item->categoria->nombre ?? null;
+                return $arr;
+            });
+
+        return response()->json($ingresos);
     }
 
     // Crea un nuevo ingreso
     public function store(Request $request)
     {
-        // Usar el helper de validación del controlador para mayor compatibilidad
         $validated = $this->validate($request, [
-            'user_id' => 'required|exists:users,id',
-            'fecha' => 'required|date',
-            'descripcion' => 'nullable|string',
-            'categoria_id' => 'nullable|integer',
-            'monto' => 'required|numeric',
+            'user_id'      => 'required',
+            'fecha'        => 'required|date',
+            'descripcion'  => 'nullable|string',
+            'category_id'  => 'nullable|integer',
+            'monto'        => 'required|numeric',
         ]);
         $ingreso = Ingreso::create($validated);
         return response()->json($ingreso, 201);
@@ -38,10 +48,10 @@ class IngresoController extends Controller
     {
         $ingreso = Ingreso::findOrFail($id);
         $validated = $this->validate($request, [
-            'fecha' => 'required|date',
-            'descripcion' => 'nullable|string',
-            'categoria_id' => 'nullable|integer',
-            'monto' => 'required|numeric',
+            'fecha'        => 'required|date',
+            'descripcion'  => 'nullable|string',
+            'category_id'  => 'nullable|integer',
+            'monto'        => 'required|numeric',
         ]);
         $ingreso->update($validated);
         return response()->json($ingreso);

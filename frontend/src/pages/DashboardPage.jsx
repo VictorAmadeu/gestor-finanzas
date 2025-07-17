@@ -1,54 +1,68 @@
-import { useContext, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-
-// MOCK DATA para pruebas (cámbialo en la Etapa 7 por fetch real)
-const MOCK_INGRESOS = [
-  {
-    id: 1,
-    fecha: "2025-07-01",
-    descripcion: "Sueldo",
-    categoria_nombre: "Salario",
-    monto: 2500.0,
-  },
-  {
-    id: 2,
-    fecha: "2025-07-10",
-    descripcion: "Venta libro",
-    categoria_nombre: "Extra",
-    monto: 40.5,
-  },
-];
-const MOCK_GASTOS = [
-  {
-    id: 1,
-    fecha: "2025-07-02",
-    descripcion: "Alquiler",
-    categoria_nombre: "Vivienda",
-    monto: 690.0,
-  },
-  {
-    id: 2,
-    fecha: "2025-07-03",
-    descripcion: "Supermercado",
-    categoria_nombre: "Comida",
-    monto: 110.75,
-  },
-];
+import MovimientoForm from "../components/MovimientoForm"; // IMPORTANTE
 
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Estados para mostrar formularios/modal de añadir y editar
   const [showAddIngreso, setShowAddIngreso] = useState(false);
   const [showAddGasto, setShowAddGasto] = useState(false);
-  const [loadingData] = useState(false);
+  const [editIngreso, setEditIngreso] = useState(null);
+  const [editGasto, setEditGasto] = useState(null);
 
-  const ingresos = MOCK_INGRESOS;
-  const gastos = MOCK_GASTOS;
+  // Datos de movimientos y categorías
+  const [ingresos, setIngresos] = useState([]);
+  const [gastos, setGastos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
+  // Fetch inicial de ingresos, gastos y categorías
+  useEffect(() => {
+    if (!user) return;
+    setLoadingData(true);
+
+    const fetchData = async () => {
+      try {
+        // Cargar ingresos
+        const resIngresos = await fetch(
+          `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
+        );
+        const ingresosData = await resIngresos.json();
+        setIngresos(ingresosData);
+
+        // Cargar gastos
+        const resGastos = await fetch(
+          `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
+        );
+        const gastosData = await resGastos.json();
+        setGastos(gastosData);
+
+        // Cargar categorías
+        const resCategorias = await fetch(
+          "http://127.0.0.1:8000/api/categories"
+        );
+        const categoriasData = await resCategorias.json();
+        setCategorias(categoriasData);
+      } catch (err) {
+        alert("Error al cargar datos del servidor");
+        setIngresos([]);
+        setGastos([]);
+        setCategorias([]);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  // Calcular totales
   const totalIngresos = ingresos.reduce(
     (sum, item) => sum + Number(item.monto),
     0
@@ -62,6 +76,68 @@ export default function DashboardPage() {
     navigate("/login");
   };
 
+  // CREAR/EDITAR ingreso/gasto
+  const handleSave = async (tipo, data) => {
+    const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
+    const url = data.id
+      ? `http://127.0.0.1:8000/api/${endpoint}/${data.id}`
+      : `http://127.0.0.1:8000/api/${endpoint}`;
+    const method = data.id ? "PUT" : "POST";
+    if (!data.id) data.user_id = user.id;
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText);
+      }
+      const saved = await res.json();
+
+      // Actualizar estado según nuevo o editado
+      if (data.id) {
+        if (tipo === "Ingreso")
+          setIngresos((prev) =>
+            prev.map((i) => (i.id === saved.id ? saved : i))
+          );
+        else
+          setGastos((prev) => prev.map((g) => (g.id === saved.id ? saved : g)));
+      } else {
+        if (tipo === "Ingreso") setIngresos((prev) => [saved, ...prev]);
+        else setGastos((prev) => [saved, ...prev]);
+      }
+
+      // Cierra los formularios/modales de edición/alta después de guardar
+      setShowAddIngreso(false);
+      setShowAddGasto(false);
+      setEditIngreso(null);
+      setEditGasto(null);
+    } catch (err) {
+      alert("Error al guardar: " + err.message);
+    }
+  };
+
+  // ELIMINAR ingreso/gasto
+  const handleDelete = async (tipo, id) => {
+    if (!window.confirm("¿Seguro de eliminar?")) return;
+    const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error();
+      if (tipo === "Ingreso")
+        setIngresos((prev) => prev.filter((i) => i.id !== id));
+      else setGastos((prev) => prev.filter((g) => g.id !== id));
+    } catch {
+      alert("Error al eliminar");
+    }
+  };
+
+  // Si no hay usuario, redirecciona a login
   if (!user) {
     navigate("/login");
     return null;
@@ -69,9 +145,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Header />
+      <Header />
       <main className="flex-1 flex flex-col items-center w-full">
-        {/* Contenedor principal ultra ancho y paddings grandes */}
+        {/* Loading */}
+        {loadingData && (
+          <div className="text-center my-10 text-lg">Cargando datos...</div>
+        )}
         <div className="w-full max-w-screen-2xl px-2 sm:px-6 lg:px-20 xl:px-36 py-12">
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-12">
@@ -109,19 +188,25 @@ export default function DashboardPage() {
           <div className="mb-8 flex gap-6 justify-center">
             <button
               className="bg-blue-600 text-white px-8 py-2 rounded shadow hover:bg-blue-700"
-              onClick={() => setShowAddIngreso(true)}
+              onClick={() => {
+                setShowAddIngreso(true);
+                setEditIngreso(null);
+              }}
             >
               + Añadir Ingreso
             </button>
             <button
               className="bg-purple-600 text-white px-8 py-2 rounded shadow hover:bg-purple-700"
-              onClick={() => setShowAddGasto(true)}
+              onClick={() => {
+                setShowAddGasto(true);
+                setEditGasto(null);
+              }}
             >
               + Añadir Gasto
             </button>
           </div>
 
-          {/* Tablas: ultra responsivas y sin cortes */}
+          {/* Tablas ultra responsivas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {/* Ingresos */}
             <div>
@@ -147,10 +232,19 @@ export default function DashboardPage() {
                           +€{Number(item.monto).toFixed(2)}
                         </td>
                         <td className="p-3 text-center">
-                          <button className="text-blue-600 hover:underline">
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => {
+                              setEditIngreso(item);
+                              setShowAddIngreso(true);
+                            }}
+                          >
                             Editar
                           </button>
-                          <button className="text-red-600 ml-2 hover:underline">
+                          <button
+                            className="text-red-600 ml-2 hover:underline"
+                            onClick={() => handleDelete("Ingreso", item.id)}
+                          >
                             Eliminar
                           </button>
                         </td>
@@ -194,10 +288,19 @@ export default function DashboardPage() {
                           -€{Number(item.monto).toFixed(2)}
                         </td>
                         <td className="p-3 text-center">
-                          <button className="text-blue-600 hover:underline">
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => {
+                              setEditGasto(item);
+                              setShowAddGasto(true);
+                            }}
+                          >
                             Editar
                           </button>
-                          <button className="text-red-600 ml-2 hover:underline">
+                          <button
+                            className="text-red-600 ml-2 hover:underline"
+                            onClick={() => handleDelete("Gasto", item.id)}
+                          >
                             Eliminar
                           </button>
                         </td>
@@ -219,8 +322,34 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Renderizado condicional del formulario modal */}
+        {showAddIngreso && (
+          <MovimientoForm
+            tipo="Ingreso"
+            categorias={categorias}
+            initialData={editIngreso}
+            onSave={(data) => handleSave("Ingreso", data)}
+            onCancel={() => {
+              setShowAddIngreso(false);
+              setEditIngreso(null);
+            }}
+          />
+        )}
+        {showAddGasto && (
+          <MovimientoForm
+            tipo="Gasto"
+            categorias={categorias}
+            initialData={editGasto}
+            onSave={(data) => handleSave("Gasto", data)}
+            onCancel={() => {
+              setShowAddGasto(false);
+              setEditGasto(null);
+            }}
+          />
+        )}
       </main>
-            <Footer />
+      <Footer />
     </div>
   );
 }

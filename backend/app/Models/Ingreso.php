@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category; // Importa el modelo Category
 
 class Ingreso extends Model
 {
     use HasFactory;
 
+    // Campos que se pueden asignar masivamente
     protected $fillable = [
         'user_id',
         'monto',
@@ -23,9 +25,9 @@ class Ingreso extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    // Relación con categoría
-    public function category()
+    // Relación con categoría (¡CORRECTA!)
+    public function categoria()
     {
-        return $this->belongsTo(Category::class, 'category_id', 'id');
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }
