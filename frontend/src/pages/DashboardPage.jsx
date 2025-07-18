@@ -155,7 +155,8 @@ export default function DashboardPage() {
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-12">
             <h1 className="text-3xl lg:text-4xl font-bold mb-4 md:mb-0 text-gray-800">
-              Hola, {user.email}
+              {/* CAMBIO: saludar por nombre si está, si no por email */}
+              Hola, {user.user_metadata?.name || user.email}
             </h1>
             <button
               onClick={handleLogout}

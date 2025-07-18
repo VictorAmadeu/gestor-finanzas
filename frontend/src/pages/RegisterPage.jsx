@@ -9,23 +9,35 @@ export default function RegisterPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // Estados para los campos del formulario
+  const [name, setName] = useState(""); // Nuevo campo para el nombre
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
+  // Función que se ejecuta al enviar el formulario de registro
   const handleRegister = async (e) => {
     e.preventDefault();
     setError(null);
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    // Llamada a Supabase para registrar, pasando el nombre en user_metadata
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name }, // Así se guarda el nombre en user_metadata
+      },
+    });
 
     if (error) {
       setError(error.message);
     } else {
+      // Navega al dashboard después de registrar correctamente
       navigate("/dashboard");
     }
   };
 
+  // Si el usuario ya está logueado, redirige al dashboard
   if (user) {
     navigate("/dashboard");
     return null;
@@ -38,6 +50,14 @@ export default function RegisterPage() {
         <div className="max-w-sm w-full mx-auto mt-8 p-6 bg-white rounded shadow">
           <h2 className="text-2xl font-bold mb-4">Crear Cuenta</h2>
           <form onSubmit={handleRegister}>
+            <input
+              type="text"
+              placeholder="Nombre"
+              className="border p-2 w-full mb-3"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
             <input
               type="email"
               placeholder="Correo electrónico"
