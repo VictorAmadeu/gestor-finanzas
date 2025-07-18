@@ -1,20 +1,20 @@
 # Gestor de Finanzas
 
-Este proyecto es una aplicaci\u00f3n b\u00e1sica para la gesti\u00f3n de finanzas personales. Incluye un backend desarrollado con **Laravel** y un frontend desarrollado con **React**.
+Este proyecto es una aplicación para la gestión de finanzas personales. Incluye un backend desarrollado con **Laravel** y un frontend desarrollado con **React**.
 
 ## Objetivos del proyecto
 
 - Registrar y administrar ingresos y gastos.
-- Mostrar balances y gr\u00e1ficos de an\u00e1lisis financiero.
-- Disponer de un sistema de autenticaci\u00f3n seguro con un panel principal.
-- Permitir exportar datos en PDF y aplicar filtros o b\u00fasquedas avanzadas.
+- Mostrar balances y un análisis financiero.
+- Disponer de un sistema de autenticación seguro con un panel principal.
+- Permitir exportar datos en PDF y aplicar filtros o búsquedas avanzadas.
 
 ## Requisitos
 
-- PHP \u2265 8.1 y Composer para el backend.
+- PHP 8.1 y Composer para el backend.
 - Node.js y npm para el frontend.
 
-## Instalaci\u00f3n r\u00e1pida
+## Instalación rápida
 
 1. Clona este repositorio.
 2. Instala las dependencias del backend:
@@ -43,7 +43,7 @@ cd backend && php artisan serve
 cd frontend && npm start
 ```
 
-El frontend se iniciar\u00e1 en `http://localhost:3000` y el backend en `http://localhost:8000` por defecto.
+El frontend se iniciará en `http://localhost:3000` y el backend en `http://localhost:8000` por defecto.
 
 ## Estructura del repositorio
 
