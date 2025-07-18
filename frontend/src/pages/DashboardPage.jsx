@@ -27,7 +27,7 @@ export default function DashboardPage() {
     if (!user) return;
     setLoadingData(true);
 
-    // 1. Intentar cargar datos cacheados de localStorage para mostrar INSTANTÁNEAMENTE
+    // Cargar datos cacheados de localStorage para mostrar instantáneamente
     const storedIngresos = localStorage.getItem("ingresos_" + user.id);
     const storedGastos = localStorage.getItem("gastos_" + user.id);
     const storedCategorias = localStorage.getItem("categorias");
@@ -36,9 +36,9 @@ export default function DashboardPage() {
     if (storedGastos) setGastos(JSON.parse(storedGastos));
     if (storedCategorias) setCategorias(JSON.parse(storedCategorias));
 
-    setLoadingData(false); // Quitamos loading aunque aún no hay datos frescos
+    setLoadingData(false);
 
-    // 2. Hacer fetch de los datos REALES del backend para refrescar la vista y la cache
+    // Fetch real del backend (y actualizar localStorage)
     const fetchData = async () => {
       try {
         // Ingresos
@@ -192,11 +192,11 @@ export default function DashboardPage() {
   const handleDelete = async (tipo, id) => {
     if (!window.confirm("¿Seguro de eliminar?")) return;
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
-    // Guarda el estado previo para poder revertir en caso de error
+    // Guarda el estado previo por si hay que revertir
     const prevIngresos = ingresos;
     const prevGastos = gastos;
 
-    // Eliminación optimista
+    // 1. Eliminación OPTIMISTA: quitar ya de la UI (inmediato)
     if (tipo === "Ingreso")
       setIngresos((prev) => prev.filter((i) => i.id !== id));
     else setGastos((prev) => prev.filter((g) => g.id !== id));
@@ -206,20 +206,20 @@ export default function DashboardPage() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
-      // Actualiza la cache tras eliminar
+      // 2. Actualiza localStorage tras eliminar
       if (tipo === "Ingreso")
         localStorage.setItem(
           "ingresos_" + user.id,
-          JSON.stringify(ingresos.filter((i) => i.id !== id))
+          JSON.stringify(prevIngresos.filter((i) => i.id !== id))
         );
       else
         localStorage.setItem(
           "gastos_" + user.id,
-          JSON.stringify(gastos.filter((g) => g.id !== id))
+          JSON.stringify(prevGastos.filter((g) => g.id !== id))
         );
     } catch {
       alert("Error al eliminar");
-      // Revertir si falla
+      // 3. Revertir en caso de error
       if (tipo === "Ingreso") setIngresos(prevIngresos);
       else setGastos(prevGastos);
     }
