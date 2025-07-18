@@ -16,39 +16,57 @@ export default function DashboardPage() {
   const [editIngreso, setEditIngreso] = useState(null);
   const [editGasto, setEditGasto] = useState(null);
 
-  // Datos de movimientos y categorías
+  // Estados de movimientos y categorías
   const [ingresos, setIngresos] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Fetch inicial de ingresos, gastos y categorías
+  // --- LOADING OPTIMISTA ---
   useEffect(() => {
     if (!user) return;
     setLoadingData(true);
 
+    // 1. Intentar cargar datos cacheados de localStorage para mostrar INSTANTÁNEAMENTE
+    const storedIngresos = localStorage.getItem("ingresos_" + user.id);
+    const storedGastos = localStorage.getItem("gastos_" + user.id);
+    const storedCategorias = localStorage.getItem("categorias");
+
+    if (storedIngresos) setIngresos(JSON.parse(storedIngresos));
+    if (storedGastos) setGastos(JSON.parse(storedGastos));
+    if (storedCategorias) setCategorias(JSON.parse(storedCategorias));
+
+    setLoadingData(false); // Quitamos loading aunque aún no hay datos frescos
+
+    // 2. Hacer fetch de los datos REALES del backend para refrescar la vista y la cache
     const fetchData = async () => {
       try {
-        // Cargar ingresos
+        // Ingresos
         const resIngresos = await fetch(
           `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
         );
         const ingresosData = await resIngresos.json();
         setIngresos(ingresosData);
+        localStorage.setItem(
+          "ingresos_" + user.id,
+          JSON.stringify(ingresosData)
+        );
 
-        // Cargar gastos
+        // Gastos
         const resGastos = await fetch(
           `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
         );
         const gastosData = await resGastos.json();
         setGastos(gastosData);
+        localStorage.setItem("gastos_" + user.id, JSON.stringify(gastosData));
 
-        // Cargar categorías
+        // Categorías
         const resCategorias = await fetch(
           "http://127.0.0.1:8000/api/categories"
         );
         const categoriasData = await resCategorias.json();
         setCategorias(categoriasData);
+        localStorage.setItem("categorias", JSON.stringify(categoriasData));
       } catch (err) {
         alert("Error al cargar datos del servidor");
         setIngresos([]);
@@ -71,13 +89,16 @@ export default function DashboardPage() {
   const totalGastos = gastos.reduce((sum, item) => sum + Number(item.monto), 0);
   const balance = totalIngresos - totalGastos;
 
-  // Logout handler
+  // LOGOUT: Limpia cache para evitar que datos viejos de un usuario se muestren a otro
   const handleLogout = async () => {
+    localStorage.removeItem("ingresos_" + user.id);
+    localStorage.removeItem("gastos_" + user.id);
+    localStorage.removeItem("categorias");
     await supabase.auth.signOut();
     navigate("/login");
   };
 
-  // --------- ACTUALIZACIÓN OPTIMISTA ---------
+  // --------- ACTUALIZACIÓN OPTIMISTA CRUD ---------
   // CREAR/EDITAR ingreso/gasto
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
@@ -87,21 +108,21 @@ export default function DashboardPage() {
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
 
-    // Buscar nombre de la categoría para mostrar en la tabla
+    // Buscar nombre de la categoría (para la tabla)
     const catNombre =
       categorias.find((c) => c.id === data.category_id)?.nombre || null;
 
-    // Cierra modal/formulario antes de esperar la red
+    // Cierra modal/formulario inmediatamente
     setShowAddIngreso(false);
     setShowAddGasto(false);
     setEditIngreso(null);
     setEditGasto(null);
 
-    // ID temporal para el registro provisional (si es alta)
+    // Objeto provisional para UI rápida
     const tempId = data.id || `tmp-${Date.now()}`;
     const provisional = { ...data, id: tempId, categoria_nombre: catNombre };
 
-    // ACTUALIZACIÓN OPTIMISTA: Añade/edita en la UI antes de pedir al backend
+    // Actualización optimista
     if (data.id) {
       if (tipo === "Ingreso")
         setIngresos((prev) =>
@@ -128,37 +149,54 @@ export default function DashboardPage() {
       }
       const saved = await res.json();
 
-      // Reemplaza provisional (tmp-xxx) por el definitivo del backend
-      if (tipo === "Ingreso")
+      // Reemplaza el temporal por el real del backend (y actualiza la cache)
+      if (tipo === "Ingreso") {
         setIngresos((prev) =>
           prev.map((i) =>
             i.id === tempId ? { ...saved, categoria_nombre: catNombre } : i
           )
         );
-      else
+        localStorage.setItem(
+          "ingresos_" + user.id,
+          JSON.stringify(
+            ingresos.map((i) =>
+              i.id === tempId ? { ...saved, categoria_nombre: catNombre } : i
+            )
+          )
+        );
+      } else {
         setGastos((prev) =>
           prev.map((g) =>
             g.id === tempId ? { ...saved, categoria_nombre: catNombre } : g
           )
         );
+        localStorage.setItem(
+          "gastos_" + user.id,
+          JSON.stringify(
+            gastos.map((g) =>
+              g.id === tempId ? { ...saved, categoria_nombre: catNombre } : g
+            )
+          )
+        );
+      }
     } catch (err) {
       alert("Error al guardar: " + err.message);
-      // Si falla, elimina el provisional
+      // Si falla, elimina el temporal
       if (tipo === "Ingreso")
         setIngresos((prev) => prev.filter((i) => i.id !== tempId));
       else setGastos((prev) => prev.filter((g) => g.id !== tempId));
     }
   };
 
-  // ELIMINAR ingreso/gasto con rollback en error
+  // ELIMINAR ingreso/gasto optimista con rollback en error
   const handleDelete = async (tipo, id) => {
     if (!window.confirm("¿Seguro de eliminar?")) return;
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
-    // Guardamos el estado previo por si hay que revertir
+    // Guarda el estado previo para poder revertir en caso de error
     const prevIngresos = ingresos;
     const prevGastos = gastos;
 
-    // Eliminación optimista: quitamos de la lista antes de enviar la petición
+    // Eliminación optimista
     if (tipo === "Ingreso")
       setIngresos((prev) => prev.filter((i) => i.id !== id));
     else setGastos((prev) => prev.filter((g) => g.id !== id));
@@ -168,6 +206,17 @@ export default function DashboardPage() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
+      // Actualiza la cache tras eliminar
+      if (tipo === "Ingreso")
+        localStorage.setItem(
+          "ingresos_" + user.id,
+          JSON.stringify(ingresos.filter((i) => i.id !== id))
+        );
+      else
+        localStorage.setItem(
+          "gastos_" + user.id,
+          JSON.stringify(gastos.filter((g) => g.id !== id))
+        );
     } catch {
       alert("Error al eliminar");
       // Revertir si falla
@@ -194,7 +243,7 @@ export default function DashboardPage() {
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-12">
             <h1 className="text-3xl lg:text-4xl font-bold mb-4 md:mb-0 text-gray-800">
-              {/* CAMBIO: saludar por nombre si está, si no por email */}
+              {/* Saludar por nombre si está, si no por email */}
               Hola, {user.user_metadata?.name || user.email}
             </h1>
             <button
