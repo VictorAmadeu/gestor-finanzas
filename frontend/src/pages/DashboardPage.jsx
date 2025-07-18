@@ -60,6 +60,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
+    // eslint-disable-next-line
   }, [user]);
 
   // Calcular totales
@@ -76,6 +77,7 @@ export default function DashboardPage() {
     navigate("/login");
   };
 
+  // --------- ACTUALIZACIÓN OPTIMISTA ---------
   // CREAR/EDITAR ingreso/gasto
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
@@ -84,6 +86,35 @@ export default function DashboardPage() {
       : `http://127.0.0.1:8000/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
+
+    // Buscar nombre de la categoría para mostrar en la tabla
+    const catNombre =
+      categorias.find((c) => c.id === data.category_id)?.nombre || null;
+
+    // Cierra modal/formulario antes de esperar la red
+    setShowAddIngreso(false);
+    setShowAddGasto(false);
+    setEditIngreso(null);
+    setEditGasto(null);
+
+    // ID temporal para el registro provisional (si es alta)
+    const tempId = data.id || `tmp-${Date.now()}`;
+    const provisional = { ...data, id: tempId, categoria_nombre: catNombre };
+
+    // ACTUALIZACIÓN OPTIMISTA: Añade/edita en la UI antes de pedir al backend
+    if (data.id) {
+      if (tipo === "Ingreso")
+        setIngresos((prev) =>
+          prev.map((i) => (i.id === provisional.id ? provisional : i))
+        );
+      else
+        setGastos((prev) =>
+          prev.map((g) => (g.id === provisional.id ? provisional : g))
+        );
+    } else {
+      if (tipo === "Ingreso") setIngresos((prev) => [provisional, ...prev]);
+      else setGastos((prev) => [provisional, ...prev]);
+    }
 
     try {
       const res = await fetch(url, {
@@ -97,43 +128,51 @@ export default function DashboardPage() {
       }
       const saved = await res.json();
 
-      // Actualizar estado según nuevo o editado
-      if (data.id) {
-        if (tipo === "Ingreso")
-          setIngresos((prev) =>
-            prev.map((i) => (i.id === saved.id ? saved : i))
-          );
-        else
-          setGastos((prev) => prev.map((g) => (g.id === saved.id ? saved : g)));
-      } else {
-        if (tipo === "Ingreso") setIngresos((prev) => [saved, ...prev]);
-        else setGastos((prev) => [saved, ...prev]);
-      }
-
-      // Cierra los formularios/modales de edición/alta después de guardar
-      setShowAddIngreso(false);
-      setShowAddGasto(false);
-      setEditIngreso(null);
-      setEditGasto(null);
+      // Reemplaza provisional (tmp-xxx) por el definitivo del backend
+      if (tipo === "Ingreso")
+        setIngresos((prev) =>
+          prev.map((i) =>
+            i.id === tempId ? { ...saved, categoria_nombre: catNombre } : i
+          )
+        );
+      else
+        setGastos((prev) =>
+          prev.map((g) =>
+            g.id === tempId ? { ...saved, categoria_nombre: catNombre } : g
+          )
+        );
     } catch (err) {
       alert("Error al guardar: " + err.message);
+      // Si falla, elimina el provisional
+      if (tipo === "Ingreso")
+        setIngresos((prev) => prev.filter((i) => i.id !== tempId));
+      else setGastos((prev) => prev.filter((g) => g.id !== tempId));
     }
   };
 
-  // ELIMINAR ingreso/gasto
+  // ELIMINAR ingreso/gasto con rollback en error
   const handleDelete = async (tipo, id) => {
     if (!window.confirm("¿Seguro de eliminar?")) return;
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
+    // Guardamos el estado previo por si hay que revertir
+    const prevIngresos = ingresos;
+    const prevGastos = gastos;
+
+    // Eliminación optimista: quitamos de la lista antes de enviar la petición
+    if (tipo === "Ingreso")
+      setIngresos((prev) => prev.filter((i) => i.id !== id));
+    else setGastos((prev) => prev.filter((g) => g.id !== id));
+
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
-      if (tipo === "Ingreso")
-        setIngresos((prev) => prev.filter((i) => i.id !== id));
-      else setGastos((prev) => prev.filter((g) => g.id !== id));
     } catch {
       alert("Error al eliminar");
+      // Revertir si falla
+      if (tipo === "Ingreso") setIngresos(prevIngresos);
+      else setGastos(prevGastos);
     }
   };
 
