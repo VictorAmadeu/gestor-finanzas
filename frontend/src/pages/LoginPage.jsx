@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+// Importamos iconos de usuario y candado
+import { UserIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+
 export default function LoginPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -56,22 +59,34 @@ export default function LoginPage() {
         <div className="max-w-sm w-full mx-auto mt-8 p-6 bg-white rounded shadow">
           <h2 className="text-2xl font-bold mb-4">Iniciar Sesión</h2>
           <form onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              className="border p-2 w-full mb-3"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              className="border p-2 w-full mb-3"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            {/* Input de email con icono */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-2.5">
+                <UserIcon className="h-5 w-5 text-gray-400" />
+              </span>
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                className="border p-2 w-full pl-10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            {/* Input de password con icono */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-2.5">
+                <LockClosedIcon className="h-5 w-5 text-gray-400" />
+              </span>
+              <input
+                type="password"
+                placeholder="Contraseña"
+                className="border p-2 w-full pl-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
             {error && <div className="text-red-500 mb-3">{error}</div>}
             <button
               type="submit"

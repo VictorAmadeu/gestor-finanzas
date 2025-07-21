@@ -4,13 +4,19 @@ import { supabase } from "../services/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import MovimientoForm from "../components/MovimientoForm"; // IMPORTANTE
+import MovimientoForm from "../components/MovimientoForm";
+// Importamos los iconos de Heroicons
+import {
+  PlusCircleIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/solid";
 
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Estados para mostrar formularios/modal de añadir y editar
+  // Estados para formularios/modal
   const [showAddIngreso, setShowAddIngreso] = useState(false);
   const [showAddGasto, setShowAddGasto] = useState(false);
   const [editIngreso, setEditIngreso] = useState(null);
@@ -22,7 +28,6 @@ export default function DashboardPage() {
   const [categorias, setCategorias] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // --- LOADING OPTIMISTA ---
   useEffect(() => {
     if (!user) return;
     setLoadingData(true);
@@ -38,10 +43,9 @@ export default function DashboardPage() {
 
     setLoadingData(false);
 
-    // Fetch real del backend (y actualizar localStorage)
+    // Fetch real del backend
     const fetchData = async () => {
       try {
-        // Ingresos
         const resIngresos = await fetch(
           `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
         );
@@ -52,7 +56,6 @@ export default function DashboardPage() {
           JSON.stringify(ingresosData)
         );
 
-        // Gastos
         const resGastos = await fetch(
           `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
         );
@@ -60,7 +63,6 @@ export default function DashboardPage() {
         setGastos(gastosData);
         localStorage.setItem("gastos_" + user.id, JSON.stringify(gastosData));
 
-        // Categorías
         const resCategorias = await fetch(
           "http://127.0.0.1:8000/api/categories"
         );
@@ -89,7 +91,7 @@ export default function DashboardPage() {
   const totalGastos = gastos.reduce((sum, item) => sum + Number(item.monto), 0);
   const balance = totalIngresos - totalGastos;
 
-  // LOGOUT: Limpia cache para evitar que datos viejos de un usuario se muestren a otro
+  // LOGOUT
   const handleLogout = async () => {
     localStorage.removeItem("ingresos_" + user.id);
     localStorage.removeItem("gastos_" + user.id);
@@ -98,8 +100,7 @@ export default function DashboardPage() {
     navigate("/login");
   };
 
-  // --------- ACTUALIZACIÓN OPTIMISTA CRUD ---------
-  // CREAR/EDITAR ingreso/gasto
+  // CRUD optimista
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
     const url = data.id
@@ -107,22 +108,17 @@ export default function DashboardPage() {
       : `http://127.0.0.1:8000/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
-
-    // Buscar nombre de la categoría (para la tabla)
     const catNombre =
       categorias.find((c) => c.id === data.category_id)?.nombre || null;
 
-    // Cierra modal/formulario inmediatamente
     setShowAddIngreso(false);
     setShowAddGasto(false);
     setEditIngreso(null);
     setEditGasto(null);
 
-    // Objeto provisional para UI rápida
     const tempId = data.id || `tmp-${Date.now()}`;
     const provisional = { ...data, id: tempId, categoria_nombre: catNombre };
 
-    // Actualización optimista
     if (data.id) {
       if (tipo === "Ingreso")
         setIngresos((prev) =>
@@ -149,7 +145,6 @@ export default function DashboardPage() {
       }
       const saved = await res.json();
 
-      // Reemplaza el temporal por el real del backend (y actualiza la cache)
       if (tipo === "Ingreso") {
         setIngresos((prev) =>
           prev.map((i) =>
@@ -181,22 +176,18 @@ export default function DashboardPage() {
       }
     } catch (err) {
       alert("Error al guardar: " + err.message);
-      // Si falla, elimina el temporal
       if (tipo === "Ingreso")
         setIngresos((prev) => prev.filter((i) => i.id !== tempId));
       else setGastos((prev) => prev.filter((g) => g.id !== tempId));
     }
   };
 
-  // ELIMINAR ingreso/gasto optimista con rollback en error
   const handleDelete = async (tipo, id) => {
     if (!window.confirm("¿Seguro de eliminar?")) return;
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
-    // Guarda el estado previo por si hay que revertir
     const prevIngresos = ingresos;
     const prevGastos = gastos;
 
-    // 1. Eliminación OPTIMISTA: quitar ya de la UI (inmediato)
     if (tipo === "Ingreso")
       setIngresos((prev) => prev.filter((i) => i.id !== id));
     else setGastos((prev) => prev.filter((g) => g.id !== id));
@@ -206,7 +197,6 @@ export default function DashboardPage() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
-      // 2. Actualiza localStorage tras eliminar
       if (tipo === "Ingreso")
         localStorage.setItem(
           "ingresos_" + user.id,
@@ -219,13 +209,11 @@ export default function DashboardPage() {
         );
     } catch {
       alert("Error al eliminar");
-      // 3. Revertir en caso de error
       if (tipo === "Ingreso") setIngresos(prevIngresos);
       else setGastos(prevGastos);
     }
   };
 
-  // Si no hay usuario, redirecciona a login
   if (!user) {
     navigate("/login");
     return null;
@@ -235,7 +223,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <main className="flex-1 flex flex-col items-center w-full">
-        {/* Loading */}
         {loadingData && (
           <div className="text-center my-10 text-lg">Cargando datos...</div>
         )}
@@ -243,7 +230,6 @@ export default function DashboardPage() {
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-12">
             <h1 className="text-3xl lg:text-4xl font-bold mb-4 md:mb-0 text-gray-800">
-              {/* Saludar por nombre si está, si no por email */}
               Hola, {user.user_metadata?.name || user.email}
             </h1>
             <button
@@ -273,25 +259,27 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Botones de acción */}
+          {/* Botones de acción con iconos */}
           <div className="mb-8 flex gap-6 justify-center">
             <button
-              className="bg-blue-600 text-white px-8 py-2 rounded shadow hover:bg-blue-700"
+              className="bg-blue-600 text-white px-8 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2"
               onClick={() => {
                 setShowAddIngreso(true);
                 setEditIngreso(null);
               }}
             >
-              + Añadir Ingreso
+              <PlusCircleIcon className="h-6 w-6 text-white" />
+              Añadir Ingreso
             </button>
             <button
-              className="bg-purple-600 text-white px-8 py-2 rounded shadow hover:bg-purple-700"
+              className="bg-purple-600 text-white px-8 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2"
               onClick={() => {
                 setShowAddGasto(true);
                 setEditGasto(null);
               }}
             >
-              + Añadir Gasto
+              <PlusCircleIcon className="h-6 w-6 text-white" />
+              Añadir Gasto
             </button>
           </div>
 
@@ -320,21 +308,23 @@ export default function DashboardPage() {
                         <td className="p-3 text-right text-green-600 font-bold">
                           +€{Number(item.monto).toFixed(2)}
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-center flex justify-center gap-2">
                           <button
-                            className="text-blue-600 hover:underline"
+                            className="text-blue-600 hover:bg-blue-100 p-1 rounded flex items-center"
                             onClick={() => {
                               setEditIngreso(item);
                               setShowAddIngreso(true);
                             }}
+                            title="Editar"
                           >
-                            Editar
+                            <PencilSquareIcon className="h-5 w-5" />
                           </button>
                           <button
-                            className="text-red-600 ml-2 hover:underline"
+                            className="text-red-600 hover:bg-red-100 p-1 rounded flex items-center"
                             onClick={() => handleDelete("Ingreso", item.id)}
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <TrashIcon className="h-5 w-5" />
                           </button>
                         </td>
                       </tr>
@@ -376,21 +366,23 @@ export default function DashboardPage() {
                         <td className="p-3 text-right text-red-600 font-bold">
                           -€{Number(item.monto).toFixed(2)}
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-center flex justify-center gap-2">
                           <button
-                            className="text-blue-600 hover:underline"
+                            className="text-blue-600 hover:bg-blue-100 p-1 rounded flex items-center"
                             onClick={() => {
                               setEditGasto(item);
                               setShowAddGasto(true);
                             }}
+                            title="Editar"
                           >
-                            Editar
+                            <PencilSquareIcon className="h-5 w-5" />
                           </button>
                           <button
-                            className="text-red-600 ml-2 hover:underline"
+                            className="text-red-600 hover:bg-red-100 p-1 rounded flex items-center"
                             onClick={() => handleDelete("Gasto", item.id)}
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <TrashIcon className="h-5 w-5" />
                           </button>
                         </td>
                       </tr>
@@ -412,7 +404,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Renderizado condicional del formulario modal */}
+        {/* Modal */}
         {showAddIngreso && (
           <MovimientoForm
             tipo="Ingreso"

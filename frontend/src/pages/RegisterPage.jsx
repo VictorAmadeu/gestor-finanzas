@@ -4,13 +4,19 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+// Importamos iconos
+import {
+  UserIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+} from "@heroicons/react/24/outline";
 
 export default function RegisterPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Estados para los campos del formulario
-  const [name, setName] = useState(""); // Nuevo campo para el nombre
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -25,14 +31,13 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { name }, // Así se guarda el nombre en user_metadata
+        data: { name },
       },
     });
 
     if (error) {
       setError(error.message);
     } else {
-      // Navega al dashboard después de registrar correctamente
       navigate("/dashboard");
     }
   };
@@ -50,31 +55,49 @@ export default function RegisterPage() {
         <div className="max-w-sm w-full mx-auto mt-8 p-6 bg-white rounded shadow">
           <h2 className="text-2xl font-bold mb-4">Crear Cuenta</h2>
           <form onSubmit={handleRegister}>
-            <input
-              type="text"
-              placeholder="Nombre"
-              className="border p-2 w-full mb-3"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              className="border p-2 w-full mb-3"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              className="border p-2 w-full mb-3"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              required
-            />
+            {/* Input nombre con icono */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-2.5">
+                <UserIcon className="h-5 w-5 text-gray-400" />
+              </span>
+              <input
+                type="text"
+                placeholder="Nombre"
+                className="border p-2 w-full pl-10"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            {/* Input email con icono */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-2.5">
+                <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+              </span>
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                className="border p-2 w-full pl-10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            {/* Input password con icono */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-2.5">
+                <LockClosedIcon className="h-5 w-5 text-gray-400" />
+              </span>
+              <input
+                type="password"
+                placeholder="Contraseña"
+                className="border p-2 w-full pl-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+            </div>
             {error && <div className="text-red-500 mb-3">{error}</div>}
             <button
               type="submit"
