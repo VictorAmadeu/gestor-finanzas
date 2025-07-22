@@ -5,11 +5,14 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MovimientoForm from "../components/MovimientoForm";
-// Importamos los iconos de Heroicons
 import {
   PlusCircleIcon,
   PencilSquareIcon,
   TrashIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  BanknotesIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/solid";
 
 export default function DashboardPage() {
@@ -227,35 +230,68 @@ export default function DashboardPage() {
           <div className="text-center my-10 text-lg">Cargando datos...</div>
         )}
         <div className="w-full max-w-screen-2xl px-2 sm:px-6 lg:px-20 xl:px-36 py-12">
-          {/* Header */}
-          <header className="flex flex-col md:flex-row justify-between items-center mb-12">
-            <h1 className="text-3xl lg:text-4xl font-bold mb-4 md:mb-0 text-gray-800">
-              Hola, {user.user_metadata?.name || user.email}
-            </h1>
-            <button
-              onClick={handleLogout}
-              className="bg-gray-300 px-5 py-2 rounded hover:bg-gray-400 transition text-base"
-            >
-              Cerrar sesión
-            </button>
+          {/* HEADER con orden responsive */}
+          <header className="flex flex-col md:flex-row justify-between items-center mb-10 w-full gap-0 md:gap-0">
+            {/* Botón arriba en móvil, derecha en desktop */}
+            <div className="w-full md:w-auto flex justify-end md:order-2 order-1">
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-6 py-2 rounded shadow hover:bg-red-700 transition text-base font-semibold mt-2 md:mt-0"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+            {/* Card de bienvenida abajo en móvil, izquierda en desktop */}
+            <div className="w-full md:w-auto flex justify-start md:order-1 order-2">
+              <div className="flex items-center gap-4 bg-white shadow-md rounded-2xl px-6 py-4 mb-4">
+                <UserCircleIcon className="h-12 w-12 text-primary" />
+                <div>
+                  <div className="text-gray-500 text-sm font-medium">
+                    Bienvenido/a
+                  </div>
+                  <div className="text-2xl md:text-3xl font-bold">
+                    <span className="text-primary">
+                      {user.user_metadata?.name || user.email}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </header>
 
-          {/* Resumen mensual */}
-          <section className="bg-gray-100 p-8 rounded-lg mb-12 flex flex-col md:flex-row md:justify-center items-center space-y-4 md:space-y-0 md:space-x-20 shadow">
-            <div>
-              Ingresos:{" "}
-              <span className="text-green-600 font-bold">
-                +€{totalIngresos.toFixed(2)}
-              </span>
+          {/* RESUMEN modular con tarjetas */}
+          <section className="mb-12 flex flex-col md:flex-row justify-center items-center gap-6">
+            {/* Ingresos */}
+            <div className="flex-1 min-w-[200px] max-w-xs bg-green-50 rounded-xl shadow p-6 flex items-center gap-4">
+              <ArrowTrendingUpIcon className="h-8 w-8 text-success" />
+              <div>
+                <div className="text-sm text-gray-500 font-medium">
+                  Ingresos
+                </div>
+                <div className="text-2xl font-bold text-success">
+                  +€{totalIngresos.toFixed(2)}
+                </div>
+              </div>
             </div>
-            <div>
-              Gastos:{" "}
-              <span className="text-red-600 font-bold">
-                -€{totalGastos.toFixed(2)}
-              </span>
+            {/* Gastos */}
+            <div className="flex-1 min-w-[200px] max-w-xs bg-red-50 rounded-xl shadow p-6 flex items-center gap-4">
+              <ArrowTrendingDownIcon className="h-8 w-8 text-danger" />
+              <div>
+                <div className="text-sm text-gray-500 font-medium">Gastos</div>
+                <div className="text-2xl font-bold text-danger">
+                  -€{totalGastos.toFixed(2)}
+                </div>
+              </div>
             </div>
-            <div>
-              Balance: <span className="font-bold">€{balance.toFixed(2)}</span>
+            {/* Balance */}
+            <div className="flex-1 min-w-[200px] max-w-xs bg-blue-50 rounded-xl shadow p-6 flex items-center gap-4">
+              <BanknotesIcon className="h-8 w-8 text-primary" />
+              <div>
+                <div className="text-sm text-gray-500 font-medium">Balance</div>
+                <div className="text-2xl font-bold text-primary">
+                  €{balance.toFixed(2)}
+                </div>
+              </div>
             </div>
           </section>
 
@@ -300,8 +336,13 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ingresos.map((item) => (
-                      <tr key={item.id} className="border-b last:border-0">
+                    {ingresos.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        className={`border-b last:border-0 ${
+                          idx % 2 === 1 ? "bg-gray-50" : ""
+                        }`}
+                      >
                         <td className="p-3">{item.fecha}</td>
                         <td className="p-3">{item.descripcion || "-"}</td>
                         <td className="p-3">{item.categoria_nombre || "-"}</td>
@@ -358,8 +399,13 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {gastos.map((item) => (
-                      <tr key={item.id} className="border-b last:border-0">
+                    {gastos.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        className={`border-b last:border-0 ${
+                          idx % 2 === 1 ? "bg-gray-50" : ""
+                        }`}
+                      >
                         <td className="p-3">{item.fecha}</td>
                         <td className="p-3">{item.descripcion || "-"}</td>
                         <td className="p-3">{item.categoria_nombre || "-"}</td>

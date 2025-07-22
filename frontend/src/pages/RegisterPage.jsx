@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { supabase } from "../services/supabaseClient";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,13 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
+  // Redirección segura si el usuario ya está logueado
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
   // Función que se ejecuta al enviar el formulario de registro
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -42,12 +49,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Si el usuario ya está logueado, redirige al dashboard
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
@@ -55,13 +56,18 @@ export default function RegisterPage() {
         {/* CARD con sombra y bordes suaves */}
         <div className="max-w-sm w-full mx-auto mt-8 p-8 bg-white rounded-lg shadow-lg border border-gray-200">
           <h2 className="text-2xl font-bold mb-6 text-center">Crear Cuenta</h2>
-          <form onSubmit={handleRegister} autoComplete="off">
-            {/* Input nombre con icono */}
+          <form onSubmit={handleRegister} autoComplete="on">
+            {/* Input nombre con label e icono */}
             <div className="relative mb-4">
+              <label htmlFor="register-name" className="sr-only">
+                Nombre
+              </label>
               <span className="absolute left-3 top-2.5">
                 <UserIcon className="h-5 w-5 text-gray-400" />
               </span>
               <input
+                id="register-name"
+                name="name"
                 type="text"
                 placeholder="Nombre"
                 className={`border ${
@@ -71,14 +77,20 @@ export default function RegisterPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoFocus
+                autoComplete="name"
               />
             </div>
-            {/* Input email con icono */}
+            {/* Input email con label e icono */}
             <div className="relative mb-4">
+              <label htmlFor="register-email" className="sr-only">
+                Correo electrónico
+              </label>
               <span className="absolute left-3 top-2.5">
                 <EnvelopeIcon className="h-5 w-5 text-gray-400" />
               </span>
               <input
+                id="register-email"
+                name="email"
                 type="email"
                 placeholder="Correo electrónico"
                 className={`border ${
@@ -87,14 +99,20 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
-            {/* Input password con icono */}
+            {/* Input password con label e icono */}
             <div className="relative mb-2">
+              <label htmlFor="register-password" className="sr-only">
+                Contraseña
+              </label>
               <span className="absolute left-3 top-2.5">
                 <LockClosedIcon className="h-5 w-5 text-gray-400" />
               </span>
               <input
+                id="register-password"
+                name="password"
                 type="password"
                 placeholder="Contraseña"
                 className={`border ${
@@ -104,6 +122,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
                 required
+                autoComplete="new-password"
               />
             </div>
             {/* Mensaje de error destacado */}
