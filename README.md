@@ -65,7 +65,7 @@ gestor-finanzas/
 │   ├── package.json        # Dependencias del frontend
 │   └── .env.example        # Variables de entorno de ejemplo para Supabase
 └── README.md               # Este archivo
-
+```
 ---
 
 ## 🗄️ Modelo de datos
