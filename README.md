@@ -106,9 +106,10 @@ cd backend
 composer install          # instala dependencias de PHP
 npm install               # instala paquetes para Vite/Tailwind
 cp .env.example .env      # crea el archivo de entorno
-php artisan key:generate  # genera la clave de la aplicación ```
+php artisan key:generate  # genera la clave de la aplicación 
+```
 
-Por defecto se utiliza **SQLite**: crea el archivo `database/database.sqlite` si no existe y configura `DB_CONNECTION=sqlite` en `.env`.
+> Por defecto se utiliza **SQLite**: crea el archivo `database/database.sqlite` si no existe y configura `DB_CONNECTION=sqlite` en `.env`.
 
 **Ejecuta las migraciones para crear las tablas:**
 
@@ -123,14 +124,16 @@ php artisan migrate
 cd ../frontend
 npm install              # instala dependencias de React
 cp .env.example .env     # copia el ejemplo de variables
+```
 
 Abre `.env` y añade tus credenciales de Supabase:
 
 ```
 REACT_APP_SUPABASE_URL=https://xxxxxxxx.supabase.co
 REACT_APP_SUPABASE_KEY=tu-clave-anónima
+```
 
->  Estas variables son leídas por supabaseClient.js.
+> Estas variables son leídas por supabaseClient.js.
 
 ---
 
@@ -140,18 +143,19 @@ REACT_APP_SUPABASE_KEY=tu-clave-anónima
 ```
 cd backend
 php artisan serve
+```
 
 > En otra terminal, inicia el frontend:
 ``` 
 cd frontend
 npm start
-
+```
 > Por defecto, el backend se ejecuta en http://localhost:8000 y el frontend en http://localhost:3000.
 
 ---
 
 ## 🔌 Endpoints de la API (resumen)
-
+```
 | Método | Ruta                                   | Descripción                                                                             |
 |--------|----------------------------------------|-----------------------------------------------------------------------------------------|
 | GET    | `/api/ingresos?user_id={uuid}`         | Obtiene todos los ingresos del usuario.                                                 |
@@ -164,6 +168,7 @@ npm start
 | DELETE | `/api/gastos/{id}`                     | Elimina un gasto.                                                                       |
 | GET    | `/api/categories`                      | Lista todas las categorías.                                                             |
 
+```
 > Todos los endpoints devuelven/aceptan **JSON**.  
 > Es necesario enviar la cabecera `Content-Type: application/json` en las peticiones **POST** y **PUT**.
 
