@@ -96,7 +96,7 @@ La base de datos cuenta con cuatro tablas principales:
 ```
 git clone https://github.com/VictorAmadeu/gestor-finanzas.git
 cd gestor-finanzas
-
+```
 ---
 
 ### 3. Configuración del backend
