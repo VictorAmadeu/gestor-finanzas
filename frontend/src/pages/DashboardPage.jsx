@@ -229,10 +229,9 @@ export default function DashboardPage() {
         {loadingData && (
           <div className="text-center my-10 text-lg">Cargando datos...</div>
         )}
-        <div className="w-full max-w-screen-2xl px-2 sm:px-6 lg:px-20 xl:px-36 py-12">
+        <div className="w-full max-w-screen-2xl px-1 sm:px-4 lg:px-12 xl:px-24 py-4 sm:py-8">
           {/* HEADER con orden responsive */}
-          <header className="flex flex-col md:flex-row justify-between items-center mb-10 w-full gap-0 md:gap-0">
-            {/* Botón arriba en móvil, derecha en desktop */}
+          <header className="flex flex-col md:flex-row justify-between items-center mb-6 w-full gap-0 md:gap-0">
             <div className="w-full md:w-auto flex justify-end md:order-2 order-1">
               <button
                 onClick={handleLogout}
@@ -241,15 +240,14 @@ export default function DashboardPage() {
                 Cerrar sesión
               </button>
             </div>
-            {/* Card de bienvenida abajo en móvil, izquierda en desktop */}
             <div className="w-full md:w-auto flex justify-start md:order-1 order-2">
-              <div className="flex items-center gap-4 bg-white shadow-md rounded-2xl px-6 py-4 mb-4">
+              <div className="flex items-center gap-4 bg-white shadow-md rounded-2xl px-4 sm:px-6 py-3 sm:py-4 mb-4">
                 <UserCircleIcon className="h-12 w-12 text-primary" />
                 <div>
                   <div className="text-gray-500 text-sm font-medium">
                     Bienvenido/a
                   </div>
-                  <div className="text-2xl md:text-3xl font-bold">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold">
                     <span className="text-primary">
                       {user.user_metadata?.name || user.email}
                     </span>
@@ -260,35 +258,39 @@ export default function DashboardPage() {
           </header>
 
           {/* RESUMEN modular con tarjetas */}
-          <section className="mb-12 flex flex-col md:flex-row justify-center items-center gap-6">
+          <section className="mb-7 flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-6">
             {/* Ingresos */}
-            <div className="flex-1 min-w-[200px] max-w-xs bg-green-50 rounded-xl shadow p-6 flex items-center gap-4">
-              <ArrowTrendingUpIcon className="h-8 w-8 text-success" />
+            <div className="flex-1 min-w-[150px] max-w-xs bg-green-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
+              <ArrowTrendingUpIcon className="h-7 w-7 sm:h-8 sm:w-8 text-success" />
               <div>
-                <div className="text-sm text-gray-500 font-medium">
+                <div className="text-xs sm:text-sm text-gray-500 font-medium">
                   Ingresos
                 </div>
-                <div className="text-2xl font-bold text-success">
+                <div className="text-xl sm:text-2xl font-bold text-success">
                   +€{totalIngresos.toFixed(2)}
                 </div>
               </div>
             </div>
             {/* Gastos */}
-            <div className="flex-1 min-w-[200px] max-w-xs bg-red-50 rounded-xl shadow p-6 flex items-center gap-4">
-              <ArrowTrendingDownIcon className="h-8 w-8 text-danger" />
+            <div className="flex-1 min-w-[150px] max-w-xs bg-red-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
+              <ArrowTrendingDownIcon className="h-7 w-7 sm:h-8 sm:w-8 text-danger" />
               <div>
-                <div className="text-sm text-gray-500 font-medium">Gastos</div>
-                <div className="text-2xl font-bold text-danger">
+                <div className="text-xs sm:text-sm text-gray-500 font-medium">
+                  Gastos
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-danger">
                   -€{totalGastos.toFixed(2)}
                 </div>
               </div>
             </div>
             {/* Balance */}
-            <div className="flex-1 min-w-[200px] max-w-xs bg-blue-50 rounded-xl shadow p-6 flex items-center gap-4">
-              <BanknotesIcon className="h-8 w-8 text-primary" />
+            <div className="flex-1 min-w-[150px] max-w-xs bg-blue-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
+              <BanknotesIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               <div>
-                <div className="text-sm text-gray-500 font-medium">Balance</div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-xs sm:text-sm text-gray-500 font-medium">
+                  Balance
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   €{balance.toFixed(2)}
                 </div>
               </div>
@@ -296,43 +298,46 @@ export default function DashboardPage() {
           </section>
 
           {/* Botones de acción con iconos */}
-          <div className="mb-8 flex gap-6 justify-center">
+          <div className="mb-5 flex gap-4 sm:gap-6 justify-center">
             <button
-              className="bg-blue-600 text-white px-8 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2"
+              className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
               onClick={() => {
                 setShowAddIngreso(true);
                 setEditIngreso(null);
               }}
             >
-              <PlusCircleIcon className="h-6 w-6 text-white" />
+              <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               Añadir Ingreso
             </button>
             <button
-              className="bg-purple-600 text-white px-8 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2"
+              className="bg-purple-600 text-white px-5 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2 text-sm sm:text-base"
               onClick={() => {
                 setShowAddGasto(true);
                 setEditGasto(null);
               }}
             >
-              <PlusCircleIcon className="h-6 w-6 text-white" />
+              <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               Añadir Gasto
             </button>
           </div>
 
           {/* Tablas ultra responsivas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
             {/* Ingresos */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Ingresos</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px] bg-white rounded shadow text-sm md:text-base">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+                Ingresos
+              </h3>
+              {/* SCROLL horizontal forzado en móvil */}
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[400px] sm:min-w-[520px] bg-white rounded shadow text-xs sm:text-base">
                   <thead className="bg-gray-200">
                     <tr>
-                      <th className="text-left p-3">Fecha</th>
-                      <th className="text-left p-3">Descripción</th>
-                      <th className="text-left p-3">Categoría</th>
-                      <th className="text-right p-3">Monto</th>
-                      <th className="p-3">Acciones</th>
+                      <th className="text-left p-2 sm:p-3">Fecha</th>
+                      <th className="text-left p-2 sm:p-3">Descripción</th>
+                      <th className="text-left p-2 sm:p-3">Categoría</th>
+                      <th className="text-right p-2 sm:p-3">Monto</th>
+                      <th className="p-2 sm:p-3">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -343,13 +348,17 @@ export default function DashboardPage() {
                           idx % 2 === 1 ? "bg-gray-50" : ""
                         }`}
                       >
-                        <td className="p-3">{item.fecha}</td>
-                        <td className="p-3">{item.descripcion || "-"}</td>
-                        <td className="p-3">{item.categoria_nombre || "-"}</td>
-                        <td className="p-3 text-right text-green-600 font-bold">
+                        <td className="p-2 sm:p-3">{item.fecha}</td>
+                        <td className="p-2 sm:p-3">
+                          {item.descripcion || "-"}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          {item.categoria_nombre || "-"}
+                        </td>
+                        <td className="p-2 sm:p-3 text-right text-green-600 font-bold">
                           +€{Number(item.monto).toFixed(2)}
                         </td>
-                        <td className="p-3 text-center flex justify-center gap-2">
+                        <td className="p-2 sm:p-3 text-center flex justify-center gap-2">
                           <button
                             className="text-blue-600 hover:bg-blue-100 p-1 rounded flex items-center"
                             onClick={() => {
@@ -358,14 +367,14 @@ export default function DashboardPage() {
                             }}
                             title="Editar"
                           >
-                            <PencilSquareIcon className="h-5 w-5" />
+                            <PencilSquareIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                           <button
                             className="text-red-600 hover:bg-red-100 p-1 rounded flex items-center"
                             onClick={() => handleDelete("Ingreso", item.id)}
                             title="Eliminar"
                           >
-                            <TrashIcon className="h-5 w-5" />
+                            <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                         </td>
                       </tr>
@@ -374,7 +383,7 @@ export default function DashboardPage() {
                       <tr>
                         <td
                           colSpan="5"
-                          className="p-3 text-center text-gray-500"
+                          className="p-2 sm:p-3 text-center text-gray-500"
                         >
                           No hay ingresos
                         </td>
@@ -386,16 +395,18 @@ export default function DashboardPage() {
             </div>
             {/* Gastos */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Gastos</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px] bg-white rounded shadow text-sm md:text-base">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+                Gastos
+              </h3>
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[400px] sm:min-w-[520px] bg-white rounded shadow text-xs sm:text-base">
                   <thead className="bg-gray-200">
                     <tr>
-                      <th className="text-left p-3">Fecha</th>
-                      <th className="text-left p-3">Descripción</th>
-                      <th className="text-left p-3">Categoría</th>
-                      <th className="text-right p-3">Monto</th>
-                      <th className="p-3">Acciones</th>
+                      <th className="text-left p-2 sm:p-3">Fecha</th>
+                      <th className="text-left p-2 sm:p-3">Descripción</th>
+                      <th className="text-left p-2 sm:p-3">Categoría</th>
+                      <th className="text-right p-2 sm:p-3">Monto</th>
+                      <th className="p-2 sm:p-3">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -406,13 +417,17 @@ export default function DashboardPage() {
                           idx % 2 === 1 ? "bg-gray-50" : ""
                         }`}
                       >
-                        <td className="p-3">{item.fecha}</td>
-                        <td className="p-3">{item.descripcion || "-"}</td>
-                        <td className="p-3">{item.categoria_nombre || "-"}</td>
-                        <td className="p-3 text-right text-red-600 font-bold">
+                        <td className="p-2 sm:p-3">{item.fecha}</td>
+                        <td className="p-2 sm:p-3">
+                          {item.descripcion || "-"}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          {item.categoria_nombre || "-"}
+                        </td>
+                        <td className="p-2 sm:p-3 text-right text-red-600 font-bold">
                           -€{Number(item.monto).toFixed(2)}
                         </td>
-                        <td className="p-3 text-center flex justify-center gap-2">
+                        <td className="p-2 sm:p-3 text-center flex justify-center gap-2">
                           <button
                             className="text-blue-600 hover:bg-blue-100 p-1 rounded flex items-center"
                             onClick={() => {
@@ -421,14 +436,14 @@ export default function DashboardPage() {
                             }}
                             title="Editar"
                           >
-                            <PencilSquareIcon className="h-5 w-5" />
+                            <PencilSquareIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                           <button
                             className="text-red-600 hover:bg-red-100 p-1 rounded flex items-center"
                             onClick={() => handleDelete("Gasto", item.id)}
                             title="Eliminar"
                           >
-                            <TrashIcon className="h-5 w-5" />
+                            <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                         </td>
                       </tr>
@@ -437,7 +452,7 @@ export default function DashboardPage() {
                       <tr>
                         <td
                           colSpan="5"
-                          className="p-3 text-center text-gray-500"
+                          className="p-2 sm:p-3 text-center text-gray-500"
                         >
                           No hay gastos
                         </td>
