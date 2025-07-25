@@ -108,13 +108,13 @@ npm install               # instala paquetes para Vite/Tailwind
 cp .env.example .env      # crea el archivo de entorno
 php artisan key:generate  # genera la clave de la aplicación ```
 
-> Por defecto se utiliza **SQLite**: crea el archivo `database/database.sqlite` si no existe y configura `DB_CONNECTION=sqlite` en `.env`.
+Por defecto se utiliza **SQLite**: crea el archivo `database/database.sqlite` si no existe y configura `DB_CONNECTION=sqlite` en `.env`.
 
 **Ejecuta las migraciones para crear las tablas:**
 
 ```
 php artisan migrate
-
+```
 ---
 
 ### 4. Configuración del frontend
