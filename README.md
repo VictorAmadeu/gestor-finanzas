@@ -35,7 +35,7 @@ Porque tener control de tus finanzas no tiene por qué ser complicado. **Gestor 
 
 ## 📦 Estructura del repositorio
 
-```plaintext
+```
 gestor-finanzas/
 ├── backend/                # API REST (Laravel)
 │   ├── app/
@@ -93,7 +93,7 @@ La base de datos cuenta con cuatro tablas principales:
 
 ### 2. Clonar el repositorio
 
-```bash
+```
 git clone https://github.com/VictorAmadeu/gestor-finanzas.git
 cd gestor-finanzas
 
@@ -101,7 +101,7 @@ cd gestor-finanzas
 
 ### 3. Configuración del backend
 
-```bash
+```
 cd backend
 composer install          # instala dependencias de PHP
 npm install               # instala paquetes para Vite/Tailwind
@@ -112,21 +112,21 @@ php artisan key:generate  # genera la clave de la aplicación
 
 **Ejecuta las migraciones para crear las tablas:**
 
-```bash
+```
 php artisan migrate
 
 ---
 
 ### 4. Configuración del frontend
 
-```bash
+```
 cd ../frontend
 npm install              # instala dependencias de React
 cp .env.example .env     # copia el ejemplo de variables
 
 Abre `.env` y añade tus credenciales de Supabase:
 
-```ini
+```
 REACT_APP_SUPABASE_URL=https://xxxxxxxx.supabase.co
 REACT_APP_SUPABASE_KEY=tu-clave-anónima
 
@@ -137,7 +137,7 @@ REACT_APP_SUPABASE_KEY=tu-clave-anónima
 ### 5. Ejecución
 
 **Inicia el backend:**
-```bash
+```
 cd backend
 php artisan serve
 
