@@ -106,7 +106,7 @@ cd backend
 composer install          # instala dependencias de PHP
 npm install               # instala paquetes para Vite/Tailwind
 cp .env.example .env      # crea el archivo de entorno
-php artisan key:generate  # genera la clave de la aplicación
+php artisan key:generate  # genera la clave de la aplicación ```
 
 > Por defecto se utiliza **SQLite**: crea el archivo `database/database.sqlite` si no existe y configura `DB_CONNECTION=sqlite` en `.env`.
 
