@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MovimientoForm from "../components/MovimientoForm";
+import ChartResumen from "../components/ChartResumen";
 import {
   PlusCircleIcon,
   PencilSquareIcon,
@@ -328,7 +329,6 @@ export default function DashboardPage() {
               <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
                 Ingresos
               </h3>
-              {/* SCROLL horizontal forzado en móvil */}
               <div className="overflow-x-auto w-full">
                 <table className="w-full min-w-[400px] sm:min-w-[520px] bg-white rounded shadow text-xs sm:text-base">
                   <thead className="bg-gray-200">
@@ -463,6 +463,16 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* GRÁFICOS perfectamente alineados en grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 mt-12">
+            <div>
+              <ChartResumen ingresos={ingresos} gastos={gastos} tipo="line" />
+            </div>
+            <div>
+              <ChartResumen ingresos={ingresos} gastos={gastos} tipo="pie" />
+            </div>
+          </div>
         </div>
 
         {/* Modal */}
@@ -495,3 +505,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+// Aquí termina el componente DashboardPage
