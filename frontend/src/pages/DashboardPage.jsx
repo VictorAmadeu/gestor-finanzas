@@ -14,7 +14,14 @@ import {
   ArrowTrendingDownIcon,
   BanknotesIcon,
   UserCircleIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/solid";
+
+// Importamos jsPDF y autotable
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+// Importamos el logo (asegúrate de que la ruta es correcta)
+import icono from "../assets/icono.png";
 
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
@@ -218,6 +225,84 @@ export default function DashboardPage() {
     }
   };
 
+  // === FUNCION EXPORTAR A PDF ===
+  const exportPDF = async () => {
+    const doc = new jsPDF("p", "pt", "A4");
+    doc.setFontSize(18);
+
+    // --- Insertar logo (icono) ---
+    let imgData;
+    if (!window.__pdf_logo_base64) {
+      // Convertir icono a base64 (fetch local file, luego FileReader)
+      const response = await fetch(icono);
+      const blob = await response.blob();
+      const reader = new window.FileReader();
+      imgData = await new Promise((res) => {
+        reader.onload = () => res(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      window.__pdf_logo_base64 = imgData;
+    } else {
+      imgData = window.__pdf_logo_base64;
+    }
+    doc.addImage(imgData, "PNG", 40, 25, 40, 40);
+
+    // Título principal
+    doc.setFontSize(18);
+    doc.text("Reporte Financiero", 100, 50);
+
+    // --- INGRESOS ---
+    doc.setFontSize(14);
+    doc.text("Ingresos", 40, 90);
+    const ingresosColumnas = ["Fecha", "Descripción", "Categoría", "Monto"];
+    const ingresosRows = ingresos.map((item) => [
+      new Date(item.fecha).toLocaleDateString("es-ES"),
+      item.descripcion || "",
+      item.categoria_nombre || "",
+      `+€${Number(item.monto).toFixed(2)}`,
+    ]);
+    autoTable(doc, {
+      startY: 100,
+      head: [ingresosColumnas],
+      body: ingresosRows,
+      margin: { left: 40, right: 40 },
+      styles: { cellPadding: 3, fontSize: 10 },
+      headStyles: { fillColor: [34, 197, 94] },
+    });
+
+    // --- GASTOS ---
+    let lastY = doc.lastAutoTable.finalY || 120;
+    doc.setFontSize(14);
+    doc.text("Gastos", 40, lastY + 30);
+    const gastosColumnas = ["Fecha", "Descripción", "Categoría", "Monto"];
+    const gastosRows = gastos.map((item) => [
+      new Date(item.fecha).toLocaleDateString("es-ES"),
+      item.descripcion || "",
+      item.categoria_nombre || "",
+      `-€${Number(item.monto).toFixed(2)}`,
+    ]);
+    autoTable(doc, {
+      startY: lastY + 40,
+      head: [gastosColumnas],
+      body: gastosRows,
+      margin: { left: 40, right: 40 },
+      styles: { cellPadding: 3, fontSize: 10 },
+      headStyles: { fillColor: [239, 68, 68] },
+    });
+
+    // --- RESUMEN ---
+    lastY = doc.lastAutoTable.finalY;
+    const totalIng = ingresos.reduce((sum, i) => sum + Number(i.monto), 0);
+    const totalGas = gastos.reduce((sum, g) => sum + Number(g.monto), 0);
+    doc.setFontSize(12);
+    doc.text(`Total Ingresos: €${totalIng.toFixed(2)}`, 40, lastY + 30);
+    doc.text(`Total Gastos: €${totalGas.toFixed(2)}`, 40, lastY + 50);
+    doc.text(`Balance: €${(totalIng - totalGas).toFixed(2)}`, 40, lastY + 70);
+
+    // --- Guardar PDF ---
+    doc.save("reporte_financiero.pdf");
+  };
+
   if (!user) {
     navigate("/login");
     return null;
@@ -231,7 +316,7 @@ export default function DashboardPage() {
           <div className="text-center my-10 text-lg">Cargando datos...</div>
         )}
         <div className="w-full max-w-screen-2xl px-1 sm:px-4 lg:px-12 xl:px-24 py-4 sm:py-8">
-          {/* HEADER con orden responsive */}
+          {/* HEADER */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-6 w-full gap-0 md:gap-0">
             <div className="w-full md:w-auto flex justify-end md:order-2 order-1">
               <button
@@ -258,9 +343,8 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          {/* RESUMEN modular con tarjetas */}
+          {/* RESUMEN */}
           <section className="mb-7 flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-6">
-            {/* Ingresos */}
             <div className="flex-1 min-w-[150px] max-w-xs bg-green-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
               <ArrowTrendingUpIcon className="h-7 w-7 sm:h-8 sm:w-8 text-success" />
               <div>
@@ -272,7 +356,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            {/* Gastos */}
             <div className="flex-1 min-w-[150px] max-w-xs bg-red-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
               <ArrowTrendingDownIcon className="h-7 w-7 sm:h-8 sm:w-8 text-danger" />
               <div>
@@ -284,7 +367,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            {/* Balance */}
             <div className="flex-1 min-w-[150px] max-w-xs bg-blue-50 rounded-xl shadow p-4 sm:p-6 flex items-center gap-2 sm:gap-4">
               <BanknotesIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
               <div>
@@ -298,7 +380,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Botones de acción con iconos */}
+          {/* Botones de acción */}
           <div className="mb-5 flex gap-4 sm:gap-6 justify-center">
             <button
               className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
@@ -320,9 +402,18 @@ export default function DashboardPage() {
               <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               Añadir Gasto
             </button>
+            {/* BOTÓN EXPORTAR PDF */}
+            <button
+              onClick={exportPDF}
+              className="bg-gray-800 hover:bg-gray-900 text-white font-semibold px-5 py-2 rounded flex items-center gap-2 text-sm sm:text-base"
+              title="Exportar datos financieros a PDF"
+            >
+              <DocumentArrowDownIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+              Exportar a PDF
+            </button>
           </div>
 
-          {/* Tablas ultra responsivas */}
+          {/* Tablas de Ingresos y Gastos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
             {/* Ingresos */}
             <div>
@@ -464,7 +555,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* GRÁFICOS perfectamente alineados en grid */}
+          {/* GRÁFICOS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 mt-12">
             <div>
               <ChartResumen ingresos={ingresos} gastos={gastos} tipo="line" />
@@ -475,7 +566,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Modal */}
+        {/* Modales */}
         {showAddIngreso && (
           <MovimientoForm
             tipo="Ingreso"
@@ -505,4 +596,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-// Aquí termina el componente DashboardPage
+// Fin del componente DashboardPage
