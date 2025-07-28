@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import { useNavigate } from "react-router-dom";
@@ -16,34 +16,43 @@ import {
   UserCircleIcon,
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/solid";
-
-// Importamos jsPDF y autotable
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-// Importamos el logo (asegúrate de que la ruta es correcta)
 import icono from "../assets/icono.png";
 
+/**
+ * DashboardPage
+ *
+ * Página principal del gestor de finanzas.
+ * Aquí ves ingresos, gastos, balance, puedes filtrar/buscar,
+ * exportar datos a PDF, y abrir formularios para editar/crear.
+ * Implementa la Etapa 10 del roadmap: filtros y búsquedas avanzadas.
+ */
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Estados para formularios/modal
+  // --- Estados para formularios y edición ---
   const [showAddIngreso, setShowAddIngreso] = useState(false);
   const [showAddGasto, setShowAddGasto] = useState(false);
   const [editIngreso, setEditIngreso] = useState(null);
   const [editGasto, setEditGasto] = useState(null);
 
-  // Estados de movimientos y categorías
+  // --- Estados de datos y loading ---
   const [ingresos, setIngresos] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // --- Etapa 10: Filtros y búsqueda ---
+  const [search, setSearch] = useState(""); // búsqueda por texto
+  const [filterCat, setFilterCat] = useState(""); // filtro por categoría
+
   useEffect(() => {
     if (!user) return;
     setLoadingData(true);
 
-    // Cargar datos cacheados de localStorage para mostrar instantáneamente
+    // Cargar datos cacheados para mostrar rápido (UX)
     const storedIngresos = localStorage.getItem("ingresos_" + user.id);
     const storedGastos = localStorage.getItem("gastos_" + user.id);
     const storedCategorias = localStorage.getItem("categorias");
@@ -51,10 +60,9 @@ export default function DashboardPage() {
     if (storedIngresos) setIngresos(JSON.parse(storedIngresos));
     if (storedGastos) setGastos(JSON.parse(storedGastos));
     if (storedCategorias) setCategorias(JSON.parse(storedCategorias));
-
     setLoadingData(false);
 
-    // Fetch real del backend
+    // Petición real al backend (Laravel API)
     const fetchData = async () => {
       try {
         const resIngresos = await fetch(
@@ -91,10 +99,10 @@ export default function DashboardPage() {
     };
 
     fetchData();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Calcular totales
+  // --- Cálculos de totales globales (sin filtrar) ---
   const totalIngresos = ingresos.reduce(
     (sum, item) => sum + Number(item.monto),
     0
@@ -102,7 +110,35 @@ export default function DashboardPage() {
   const totalGastos = gastos.reduce((sum, item) => sum + Number(item.monto), 0);
   const balance = totalIngresos - totalGastos;
 
-  // LOGOUT
+  // --- Filtros: Listas filtradas para mostrar en tablas ---
+  // Se usan useMemo para evitar recalcular en cada render (optimización)
+  const filteredIngresos = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return ingresos.filter((item) => {
+      const matchesSearch =
+        term === "" ||
+        item.descripcion?.toLowerCase().includes(term) ||
+        item.categoria_nombre?.toLowerCase().includes(term);
+      const matchesCategory =
+        filterCat === "" || item.categoria_nombre === filterCat;
+      return matchesSearch && matchesCategory;
+    });
+  }, [ingresos, search, filterCat]);
+
+  const filteredGastos = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return gastos.filter((item) => {
+      const matchesSearch =
+        term === "" ||
+        item.descripcion?.toLowerCase().includes(term) ||
+        item.categoria_nombre?.toLowerCase().includes(term);
+      const matchesCategory =
+        filterCat === "" || item.categoria_nombre === filterCat;
+      return matchesSearch && matchesCategory;
+    });
+  }, [gastos, search, filterCat]);
+
+  // --- LOGOUT ---
   const handleLogout = async () => {
     localStorage.removeItem("ingresos_" + user.id);
     localStorage.removeItem("gastos_" + user.id);
@@ -111,7 +147,7 @@ export default function DashboardPage() {
     navigate("/login");
   };
 
-  // CRUD optimista
+  // --- CRUD Optimista ---
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
     const url = data.id
@@ -119,6 +155,7 @@ export default function DashboardPage() {
       : `http://127.0.0.1:8000/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
+    // Encuentra el nombre de la categoría desde la lista global
     const catNombre =
       categorias.find((c) => c.id === data.category_id)?.nombre || null;
 
@@ -127,6 +164,7 @@ export default function DashboardPage() {
     setEditIngreso(null);
     setEditGasto(null);
 
+    // Inserción provisional para mejor UX
     const tempId = data.id || `tmp-${Date.now()}`;
     const provisional = { ...data, id: tempId, categoria_nombre: catNombre };
 
@@ -156,6 +194,7 @@ export default function DashboardPage() {
       }
       const saved = await res.json();
 
+      // Asegura que categoria_nombre esté presente en el registro insertado
       if (tipo === "Ingreso") {
         setIngresos((prev) =>
           prev.map((i) =>
@@ -193,6 +232,7 @@ export default function DashboardPage() {
     }
   };
 
+  // --- Eliminar registro ---
   const handleDelete = async (tipo, id) => {
     if (!window.confirm("¿Seguro de eliminar?")) return;
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
@@ -225,15 +265,14 @@ export default function DashboardPage() {
     }
   };
 
-  // === FUNCION EXPORTAR A PDF ===
+  // --- Exportar a PDF (ingresos + gastos + resumen) ---
   const exportPDF = async () => {
     const doc = new jsPDF("p", "pt", "A4");
     doc.setFontSize(18);
 
-    // --- Insertar logo (icono) ---
+    // Insertar logo
     let imgData;
     if (!window.__pdf_logo_base64) {
-      // Convertir icono a base64 (fetch local file, luego FileReader)
       const response = await fetch(icono);
       const blob = await response.blob();
       const reader = new window.FileReader();
@@ -247,11 +286,10 @@ export default function DashboardPage() {
     }
     doc.addImage(imgData, "PNG", 40, 25, 40, 40);
 
-    // Título principal
     doc.setFontSize(18);
     doc.text("Reporte Financiero", 100, 50);
 
-    // --- INGRESOS ---
+    // Tabla Ingresos
     doc.setFontSize(14);
     doc.text("Ingresos", 40, 90);
     const ingresosColumnas = ["Fecha", "Descripción", "Categoría", "Monto"];
@@ -270,7 +308,7 @@ export default function DashboardPage() {
       headStyles: { fillColor: [34, 197, 94] },
     });
 
-    // --- GASTOS ---
+    // Tabla Gastos
     let lastY = doc.lastAutoTable.finalY || 120;
     doc.setFontSize(14);
     doc.text("Gastos", 40, lastY + 30);
@@ -290,7 +328,7 @@ export default function DashboardPage() {
       headStyles: { fillColor: [239, 68, 68] },
     });
 
-    // --- RESUMEN ---
+    // Resumen final
     lastY = doc.lastAutoTable.finalY;
     const totalIng = ingresos.reduce((sum, i) => sum + Number(i.monto), 0);
     const totalGas = gastos.reduce((sum, g) => sum + Number(g.monto), 0);
@@ -299,15 +337,16 @@ export default function DashboardPage() {
     doc.text(`Total Gastos: €${totalGas.toFixed(2)}`, 40, lastY + 50);
     doc.text(`Balance: €${(totalIng - totalGas).toFixed(2)}`, 40, lastY + 70);
 
-    // --- Guardar PDF ---
     doc.save("reporte_financiero.pdf");
   };
 
+  // --- Si no hay usuario, redirige a login ---
   if (!user) {
     navigate("/login");
     return null;
   }
 
+  // --- Render del Dashboard ---
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -380,40 +419,64 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Botones de acción */}
-          <div className="mb-5 flex gap-4 sm:gap-6 justify-center">
-            <button
-              className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
-              onClick={() => {
-                setShowAddIngreso(true);
-                setEditIngreso(null);
-              }}
-            >
-              <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              Añadir Ingreso
-            </button>
-            <button
-              className="bg-purple-600 text-white px-5 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2 text-sm sm:text-base"
-              onClick={() => {
-                setShowAddGasto(true);
-                setEditGasto(null);
-              }}
-            >
-              <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              Añadir Gasto
-            </button>
-            {/* BOTÓN EXPORTAR PDF */}
-            <button
-              onClick={exportPDF}
-              className="bg-gray-800 hover:bg-gray-900 text-white font-semibold px-5 py-2 rounded flex items-center gap-2 text-sm sm:text-base"
-              title="Exportar datos financieros a PDF"
-            >
-              <DocumentArrowDownIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-              Exportar a PDF
-            </button>
+          {/* FILTROS + ACCIONES */}
+          <div className="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Filtros */}
+            <div className="flex flex-col sm:flex-row items-center mb-2 md:mb-0 gap-2">
+              <input
+                type="text"
+                placeholder="Buscar..."
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-200 w-full sm:w-auto"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <select
+                value={filterCat}
+                onChange={(e) => setFilterCat(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-200 w-full sm:w-auto"
+              >
+                <option value="">Todas las categorías</option>
+                {categorias.map((cat) => (
+                  <option key={cat.id} value={cat.nombre}>
+                    {cat.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Acciones */}
+            <div className="flex gap-4 sm:gap-6 justify-center">
+              <button
+                className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base"
+                onClick={() => {
+                  setShowAddIngreso(true);
+                  setEditIngreso(null);
+                }}
+              >
+                <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                Añadir Ingreso
+              </button>
+              <button
+                className="bg-purple-600 text-white px-5 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2 text-sm sm:text-base"
+                onClick={() => {
+                  setShowAddGasto(true);
+                  setEditGasto(null);
+                }}
+              >
+                <PlusCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                Añadir Gasto
+              </button>
+              <button
+                onClick={exportPDF}
+                className="bg-gray-800 hover:bg-gray-900 text-white font-semibold px-5 py-2 rounded flex items-center gap-2 text-sm sm:text-base"
+                title="Exportar datos financieros a PDF"
+              >
+                <DocumentArrowDownIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                Exportar a PDF
+              </button>
+            </div>
           </div>
 
-          {/* Tablas de Ingresos y Gastos */}
+          {/* TABLAS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
             {/* Ingresos */}
             <div>
@@ -432,7 +495,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ingresos.map((item, idx) => (
+                    {filteredIngresos.map((item, idx) => (
                       <tr
                         key={item.id}
                         className={`border-b last:border-0 ${
@@ -470,7 +533,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                     ))}
-                    {ingresos.length === 0 && !loadingData && (
+                    {filteredIngresos.length === 0 && !loadingData && (
                       <tr>
                         <td
                           colSpan="5"
@@ -501,7 +564,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {gastos.map((item, idx) => (
+                    {filteredGastos.map((item, idx) => (
                       <tr
                         key={item.id}
                         className={`border-b last:border-0 ${
@@ -539,7 +602,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                     ))}
-                    {gastos.length === 0 && !loadingData && (
+                    {filteredGastos.length === 0 && !loadingData && (
                       <tr>
                         <td
                           colSpan="5"
@@ -566,7 +629,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Modales */}
+        {/* Formularios de añadir/editar */}
         {showAddIngreso && (
           <MovimientoForm
             tipo="Ingreso"
@@ -596,4 +659,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-// Fin del componente DashboardPage
