@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -13,7 +13,7 @@ function App() {
   if (loading) return <div>Cargando...</div>;
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Ruta de registro */}
         <Route path="/register" element={<RegisterPage />} />
@@ -30,7 +30,7 @@ function App() {
           element={<Navigate to={user ? "/dashboard" : "/login"} />}
         />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
