@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/gestor-finanzas/static/css/main.57ba0896.css",
+    "main.js": "/gestor-finanzas/static/js/main.11eab128.js",
+    "static/js/239.ad40150f.chunk.js": "/gestor-finanzas/static/js/239.ad40150f.chunk.js",
+    "static/js/977.b584b783.chunk.js": "/gestor-finanzas/static/js/977.b584b783.chunk.js",
+    "static/js/455.fe4744a1.chunk.js": "/gestor-finanzas/static/js/455.fe4744a1.chunk.js",
+    "static/media/icono.png": "/gestor-finanzas/static/media/icono.7cf889d8678d524e0f71.png",
+    "index.html": "/gestor-finanzas/index.html",
+    "main.57ba0896.css.map": "/gestor-finanzas/static/css/main.57ba0896.css.map",
+    "main.11eab128.js.map": "/gestor-finanzas/static/js/main.11eab128.js.map",
+    "239.ad40150f.chunk.js.map": "/gestor-finanzas/static/js/239.ad40150f.chunk.js.map",
+    "977.b584b783.chunk.js.map": "/gestor-finanzas/static/js/977.b584b783.chunk.js.map",
+    "455.fe4744a1.chunk.js.map": "/gestor-finanzas/static/js/455.fe4744a1.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.57ba0896.css",
+    "static/js/main.11eab128.js"
+  ]
+}
