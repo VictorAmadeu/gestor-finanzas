@@ -22,31 +22,31 @@ import icono from "../assets/icono.png";
 
 /**
  * DashboardPage
- *
  * Página principal del gestor de finanzas.
- * Aquí ves ingresos, gastos, balance, puedes filtrar/buscar,
- * exportar datos a PDF, y abrir formularios para editar/crear.
- * Implementa la Etapa 10 del roadmap: filtros y búsquedas avanzadas.
+ * Usa variables de entorno para la URL del backend.
  */
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // --- Estados para formularios y edición ---
+  // --- Constante para la URL base de la API (usa .env) ---
+  const API_URL = process.env.REACT_APP_API_URL;
+
+  // Estados para formularios y edición
   const [showAddIngreso, setShowAddIngreso] = useState(false);
   const [showAddGasto, setShowAddGasto] = useState(false);
   const [editIngreso, setEditIngreso] = useState(null);
   const [editGasto, setEditGasto] = useState(null);
 
-  // --- Estados de datos y loading ---
+  // Estados de datos y loading
   const [ingresos, setIngresos] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // --- Etapa 10: Filtros y búsqueda ---
-  const [search, setSearch] = useState(""); // búsqueda por texto
-  const [filterCat, setFilterCat] = useState(""); // filtro por categoría
+  // Filtros y búsqueda
+  const [search, setSearch] = useState("");
+  const [filterCat, setFilterCat] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -62,11 +62,12 @@ export default function DashboardPage() {
     if (storedCategorias) setCategorias(JSON.parse(storedCategorias));
     setLoadingData(false);
 
-    // Petición real al backend (Laravel API)
+    // --- Petición real al backend (Laravel API usando variable de entorno) ---
     const fetchData = async () => {
       try {
+        // --- Cambiado: todas las rutas usan API_URL de entorno ---
         const resIngresos = await fetch(
-          `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
+          `${API_URL}/api/ingresos?user_id=${user.id}`
         );
         const ingresosData = await resIngresos.json();
         setIngresos(ingresosData);
@@ -76,15 +77,13 @@ export default function DashboardPage() {
         );
 
         const resGastos = await fetch(
-          `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
+          `${API_URL}/api/gastos?user_id=${user.id}`
         );
         const gastosData = await resGastos.json();
         setGastos(gastosData);
         localStorage.setItem("gastos_" + user.id, JSON.stringify(gastosData));
 
-        const resCategorias = await fetch(
-          "http://127.0.0.1:8000/api/categories"
-        );
+        const resCategorias = await fetch(`${API_URL}/api/categories`);
         const categoriasData = await resCategorias.json();
         setCategorias(categoriasData);
         localStorage.setItem("categorias", JSON.stringify(categoriasData));
@@ -111,7 +110,6 @@ export default function DashboardPage() {
   const balance = totalIngresos - totalGastos;
 
   // --- Filtros: Listas filtradas para mostrar en tablas ---
-  // Se usan useMemo para evitar recalcular en cada render (optimización)
   const filteredIngresos = useMemo(() => {
     const term = search.trim().toLowerCase();
     return ingresos.filter((item) => {
@@ -151,8 +149,8 @@ export default function DashboardPage() {
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
     const url = data.id
-      ? `http://127.0.0.1:8000/api/${endpoint}/${data.id}`
-      : `http://127.0.0.1:8000/api/${endpoint}`;
+      ? `${API_URL}/api/${endpoint}/${data.id}`
+      : `${API_URL}/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
     // Encuentra el nombre de la categoría desde la lista global
@@ -244,7 +242,7 @@ export default function DashboardPage() {
     else setGastos((prev) => prev.filter((g) => g.id !== id));
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}/${id}`, {
+      const res = await fetch(`${API_URL}/api/${endpoint}/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
