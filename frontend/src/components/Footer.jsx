@@ -19,7 +19,11 @@ export default function Footer() {
             className="flex items-center hover:text-primary-light transition"
             title="Portafolio Vue"
           >
-            <img src="/vue-logo.png" alt="Vue Logo" className="h-6 w-6 mr-1" />
+            <img
+              src={process.env.PUBLIC_URL + "/vue-logo.png"}
+              alt="Vue Logo"
+              className="h-6 w-6 mr-1"
+            />
             Portafolio
           </a>
           {/* LinkedIn */}
@@ -31,7 +35,7 @@ export default function Footer() {
             title="LinkedIn"
           >
             <img
-              src="/linkedin-logo.png"
+              src={process.env.PUBLIC_URL + "/linkedin-logo.png"}
               alt="LinkedIn Logo"
               className="h-6 w-6 mr-1"
             />
@@ -46,7 +50,7 @@ export default function Footer() {
             title="Repositorio"
           >
             <img
-              src="/github-logo.png"
+              src={process.env.PUBLIC_URL + "/github-logo.png"}
               alt="GitHub Logo"
               className="h-6 w-6 mr-1"
             />
