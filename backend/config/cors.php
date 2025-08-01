@@ -6,7 +6,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'], // Permite cualquier origen (solo para desarrollo)
+    'allowed_origins' => ['https://victoramadeu.github.io'], 
     
     'allowed_origins_patterns' => [],
 
