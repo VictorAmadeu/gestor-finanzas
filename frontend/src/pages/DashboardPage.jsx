@@ -29,6 +29,9 @@ import icono from "../assets/icono.png";
  * Implementa la Etapa 10 del roadmap: filtros y búsquedas avanzadas.
  */
 export default function DashboardPage() {
+  // --- DECLARA LA VARIABLE BASE URL DE LA API ---
+  const API_URL = process.env.REACT_APP_API_URL;
+
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -66,7 +69,7 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const resIngresos = await fetch(
-          `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
+          `${API_URL}/api/ingresos?user_id=${user.id}`
         );
         const ingresosData = await resIngresos.json();
         setIngresos(ingresosData);
@@ -76,14 +79,14 @@ export default function DashboardPage() {
         );
 
         const resGastos = await fetch(
-          `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
+          `${API_URL}/api/gastos?user_id=${user.id}`
         );
         const gastosData = await resGastos.json();
         setGastos(gastosData);
         localStorage.setItem("gastos_" + user.id, JSON.stringify(gastosData));
 
         const resCategorias = await fetch(
-          "http://127.0.0.1:8000/api/categories"
+          `${API_URL}/api/categories`
         );
         const categoriasData = await resCategorias.json();
         setCategorias(categoriasData);
@@ -111,7 +114,6 @@ export default function DashboardPage() {
   const balance = totalIngresos - totalGastos;
 
   // --- Filtros: Listas filtradas para mostrar en tablas ---
-  // Se usan useMemo para evitar recalcular en cada render (optimización)
   const filteredIngresos = useMemo(() => {
     const term = search.trim().toLowerCase();
     return ingresos.filter((item) => {
@@ -151,8 +153,8 @@ export default function DashboardPage() {
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
     const url = data.id
-      ? `http://127.0.0.1:8000/api/${endpoint}/${data.id}`
-      : `http://127.0.0.1:8000/api/${endpoint}`;
+      ? `${API_URL}/api/${endpoint}/${data.id}`
+      : `${API_URL}/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
     // Encuentra el nombre de la categoría desde la lista global
@@ -244,7 +246,7 @@ export default function DashboardPage() {
     else setGastos((prev) => prev.filter((g) => g.id !== id));
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}/${id}`, {
+      const res = await fetch(`${API_URL}/api/${endpoint}/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
