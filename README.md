@@ -2,6 +2,8 @@
 
 Gestor de Finanzas es una aplicación **open source** para la gestión de finanzas personales. Está compuesta por un backend desarrollado en **Laravel** y un frontend en **React**. Su objetivo principal es que cualquier usuario pueda registrar ingresos y gastos, clasificarlos por categorías y visualizar un balance actualizado en un panel moderno y responsivo.
 
+**Nota:** este proyecto está destinado a usarse únicamente de forma local y no se desplegará en la nube.
+
 ## 🚀 ¿Por qué existe este proyecto?
 
 Porque tener control de tus finanzas no tiene por qué ser complicado. **Gestor de Finanzas** ofrece una solución simple pero potente para llevar un registro de tus movimientos económicos y tomar decisiones más informadas.
