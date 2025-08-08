@@ -19,6 +19,7 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import icono from "../assets/icono.png";
+import { fetchWithTimeout } from "../services/apiClient";
 
 /**
  * DashboardPage
@@ -65,8 +66,11 @@ export default function DashboardPage() {
     // Petición real al backend (Laravel API)
     const fetchData = async () => {
       try {
-        const resIngresos = await fetch(
-          `http://127.0.0.1:8000/api/ingresos?user_id=${user.id}`
+        // --- Ingresos ---
+        const resIngresos = await fetchWithTimeout(
+          `/api/ingresos?user_id=${user.id}`,
+          {},
+          10000
         );
         const ingresosData = await resIngresos.json();
         setIngresos(ingresosData);
@@ -75,21 +79,31 @@ export default function DashboardPage() {
           JSON.stringify(ingresosData)
         );
 
-        const resGastos = await fetch(
-          `http://127.0.0.1:8000/api/gastos?user_id=${user.id}`
+        // --- Gastos ---
+        const resGastos = await fetchWithTimeout(
+          `/api/gastos?user_id=${user.id}`,
+          {},
+          10000
         );
         const gastosData = await resGastos.json();
         setGastos(gastosData);
         localStorage.setItem("gastos_" + user.id, JSON.stringify(gastosData));
 
-        const resCategorias = await fetch(
-          "http://127.0.0.1:8000/api/categories"
+        // --- Categorías ---
+        const resCategorias = await fetchWithTimeout(
+          "/api/categories",
+          {},
+          10000
         );
         const categoriasData = await resCategorias.json();
         setCategorias(categoriasData);
         localStorage.setItem("categorias", JSON.stringify(categoriasData));
       } catch (err) {
-        alert("Error al cargar datos del servidor");
+        if (err.name === "AbortError") {
+          alert("El servidor no responde, intenta más tarde.");
+        } else {
+          alert("Error al cargar datos del servidor");
+        }
         setIngresos([]);
         setGastos([]);
         setCategorias([]);
@@ -111,7 +125,6 @@ export default function DashboardPage() {
   const balance = totalIngresos - totalGastos;
 
   // --- Filtros: Listas filtradas para mostrar en tablas ---
-  // Se usan useMemo para evitar recalcular en cada render (optimización)
   const filteredIngresos = useMemo(() => {
     const term = search.trim().toLowerCase();
     return ingresos.filter((item) => {
@@ -150,12 +163,9 @@ export default function DashboardPage() {
   // --- CRUD Optimista ---
   const handleSave = async (tipo, data) => {
     const endpoint = tipo === "Ingreso" ? "ingresos" : "gastos";
-    const url = data.id
-      ? `http://127.0.0.1:8000/api/${endpoint}/${data.id}`
-      : `http://127.0.0.1:8000/api/${endpoint}`;
+    const url = data.id ? `/api/${endpoint}/${data.id}` : `/api/${endpoint}`;
     const method = data.id ? "PUT" : "POST";
     if (!data.id) data.user_id = user.id;
-    // Encuentra el nombre de la categoría desde la lista global
     const catNombre =
       categorias.find((c) => c.id === data.category_id)?.nombre || null;
 
@@ -164,7 +174,6 @@ export default function DashboardPage() {
     setEditIngreso(null);
     setEditGasto(null);
 
-    // Inserción provisional para mejor UX
     const tempId = data.id || `tmp-${Date.now()}`;
     const provisional = { ...data, id: tempId, categoria_nombre: catNombre };
 
@@ -183,18 +192,21 @@ export default function DashboardPage() {
     }
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await fetchWithTimeout(
+        url,
+        {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        },
+        10000
+      );
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText);
       }
       const saved = await res.json();
 
-      // Asegura que categoria_nombre esté presente en el registro insertado
       if (tipo === "Ingreso") {
         setIngresos((prev) =>
           prev.map((i) =>
@@ -225,7 +237,11 @@ export default function DashboardPage() {
         );
       }
     } catch (err) {
-      alert("Error al guardar: " + err.message);
+      if (err.name === "AbortError") {
+        alert("El servidor no responde, intenta más tarde.");
+      } else {
+        alert("Error al guardar: " + err.message);
+      }
       if (tipo === "Ingreso")
         setIngresos((prev) => prev.filter((i) => i.id !== tempId));
       else setGastos((prev) => prev.filter((g) => g.id !== tempId));
@@ -244,9 +260,11 @@ export default function DashboardPage() {
     else setGastos((prev) => prev.filter((g) => g.id !== id));
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetchWithTimeout(
+        `/api/${endpoint}/${id}`,
+        { method: "DELETE" },
+        10000
+      );
       if (!res.ok) throw new Error();
       if (tipo === "Ingreso")
         localStorage.setItem(
@@ -258,8 +276,12 @@ export default function DashboardPage() {
           "gastos_" + user.id,
           JSON.stringify(prevGastos.filter((g) => g.id !== id))
         );
-    } catch {
-      alert("Error al eliminar");
+    } catch (err) {
+      if (err.name === "AbortError") {
+        alert("El servidor no responde, intenta más tarde.");
+      } else {
+        alert("Error al eliminar");
+      }
       if (tipo === "Ingreso") setIngresos(prevIngresos);
       else setGastos(prevGastos);
     }
